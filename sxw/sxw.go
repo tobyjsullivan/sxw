@@ -13,7 +13,7 @@ type SXW struct {
 	privateKey []byte
 }
 
-func (w *SXW) Decrypt(encrypted, hash []byte) error {
+func (w *SXW) Decrypt(encrypted []byte, hash *Hash) error {
 	cblock, err := getCipherBlock(hash)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (w *SXW) Decrypt(encrypted, hash []byte) error {
 	return nil
 }
 
-func (w *SXW) Encrypt(hash []byte) ([]byte, error) {
+func (w *SXW) Encrypt(hash *Hash) ([]byte, error) {
 	if !w.isInitialized() {
 		return nil, errors.New("SXW is not initialized. Use Generate() or Decode() first.")
 	}
@@ -65,8 +65,13 @@ func (w *SXW) isInitialized() bool {
 	return w.privateKey != nil
 }
 
-func getCipherBlock(hash []byte) (cipher.Block, error) {
-	return aes.NewCipher(hash)
+func getCipherBlock(hash *Hash) (cipher.Block, error) {
+	hashBytes, err := hash.ToBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	return aes.NewCipher(hashBytes)
 }
 
 func (w *SXW) Generate() error {
